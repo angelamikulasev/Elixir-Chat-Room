@@ -3,10 +3,20 @@ defmodule ChatWeb.RoomChannel do
 
   def join("room:lobby", payload, socket) do
     if authorized?(payload) do
+      send(self(), :after_join)
       {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
+  end
+
+  def handle_info(:after_join, socket) do
+    Chat.Message.get_messages()
+    |> Enum.each(fn msg -> push(socket, "shout", %{
+        name: msg.name,
+        message: msg.message,
+      }) end)
+    {:noreply, socket}
   end
 
   # Channels can be used in a request/response fashion
@@ -27,7 +37,6 @@ defmodule ChatWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  # Add authorization logic here as required.
   defp authorized?(_payload) do
     true
   end
