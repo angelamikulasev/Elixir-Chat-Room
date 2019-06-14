@@ -12,7 +12,12 @@ defmodule ChatWeb.RoomChannel do
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client
   def handle_in("ping", payload, socket) do
-    {:reply, {:ok, payload}, socket}
+    Chat.Message.changeset(%Chat.Message{}, payload)
+    |> Chat.Repo.insert
+
+    broadcast socket, "shout", payload
+
+    {:noreply, socket}
   end
 
   # It is also common to receive messages from the client and
